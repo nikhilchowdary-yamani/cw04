@@ -17,14 +17,70 @@ class PlanManagerScreen extends StatefulWidget {
 class _PlanManagerScreenState extends State<PlanManagerScreen> {
   final List<Plan> _plans = [];
   final uuid = Uuid();
+  PlanPriority? _priorityFilter;
+
+  List<Plan> _getFilteredPlans() {
+  if (_priorityFilter == null) {
+    return _plans;
+  }
+  
+  return _plans.where((plan) => plan.priority == _priorityFilter).toList();
+}
 
 @override
 Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
-      title: const Text('Adoption & Travel Planner'),
+  title: const Text('Adoption & Travel Planner'),
+  actions: [
+    PopupMenuButton<PlanPriority?>(
+      icon: const Icon(Icons.filter_list),
+      tooltip: 'Filter by priority',
+      onSelected: (PlanPriority? value) {
+        setState(() {
+          _priorityFilter = value;
+        });
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: null,
+          child: Text('All Priorities'),
+        ),
+        PopupMenuItem(
+          value: PlanPriority.high,
+          child: Row(
+            children: [
+              Icon(Icons.priority_high, color: Colors.red),
+              const SizedBox(width: 8),
+              const Text('High Priority'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: PlanPriority.medium,
+          child: Row(
+            children: [
+              Icon(Icons.drag_handle, color: Colors.orange),
+              const SizedBox(width: 8),
+              const Text('Medium Priority'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: PlanPriority.low,
+          child: Row(
+            children: [
+              Icon(Icons.arrow_downward, color: Colors.green),
+              const SizedBox(width: 8),
+              const Text('Low Priority'),
+            ],
+          ),
+        ),
+      ],
     ),
-    body: Column(
+  ],
+),
+body: Column(
       children: [
         // Calendar
         Card(
@@ -72,21 +128,48 @@ PlanDragTarget(
     ),
   );
 }
-  Widget _buildPlanList() {
-  if (_plans.isEmpty) {
-    return const Center(
-      child: Text('No plans yet. Tap + to add a new plan.'),
+// In _buildPlanList method in plan_manager_screen.dart
+Widget _buildPlanList() {
+  final filteredPlans = _getFilteredPlans();
+  
+  if (filteredPlans.isEmpty) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text('No plans found.'),
+          if (_priorityFilter != null)
+            TextButton.icon(
+              icon: const Icon(Icons.filter_alt_off),
+              label: const Text('Clear Filter'),
+              onPressed: () {
+                setState(() {
+                  _priorityFilter = null;
+                });
+              },
+            ),
+        ],
+      ),
     );
   }
   
-  // Sort plans by priority (high to low)
-  _plans.sort((a, b) => b.priority.index.compareTo(a.priority.index));
+  // Sort plans by priority (high to low) and then by status (pending first)
+  filteredPlans.sort((a, b) {
+    // First sort by priority (high to low)
+    int priorityComparison = b.priority.index.compareTo(a.priority.index);
+    if (priorityComparison != 0) {
+      return priorityComparison;
+    }
+    
+    // If priorities are the same, sort by status (pending first)
+    return a.status.index.compareTo(b.status.index);
+  });
   
   return ListView.builder(
-    itemCount: _plans.length,
+    itemCount: filteredPlans.length,
     itemBuilder: (context, index) {
       return PlanListItem(
-        plan: _plans[index],
+        plan: filteredPlans[index],
         onDelete: _deletePlan,
         onToggleStatus: _togglePlanStatus,
         onEdit: _showEditPlanDialog,
@@ -94,7 +177,7 @@ PlanDragTarget(
     },
   );
 }
-void _showAddPlanDialogWithPrefilledData(
+  void _showAddPlanDialogWithPrefilledData(
   String name,
   String description,
   DateTime date,
@@ -289,11 +372,13 @@ void _togglePlanStatus(String id) {
     }
   });
 }
-  void _showAddPlanDialog() {
+
+
+void _showAddPlanDialog() {
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
   DateTime selectedDate = DateTime.now();
-  PlanPriority selectedPriority = PlanPriority.medium;
+  PlanPriority selectedPriority = PlanPriority.medium; // Default priority
 
   showDialog(
     context: context,
@@ -341,15 +426,50 @@ void _togglePlanStatus(String id) {
               ],
             ),
             const SizedBox(height: 16),
+            // Priority Selector
             DropdownButtonFormField<PlanPriority>(
               value: selectedPriority,
               decoration: const InputDecoration(
                 labelText: 'Priority',
+                border: OutlineInputBorder(),
               ),
               items: PlanPriority.values.map((priority) {
+                // Get display name (convert 'high' from PlanPriority.high)
+                final name = priority.toString().split('.').last;
+                // Choose icon and color based on priority
+                IconData icon;
+                Color color;
+                
+                switch (priority) {
+                  case PlanPriority.high:
+                    icon = Icons.priority_high;
+                    color = Colors.red;
+                    break;
+                  case PlanPriority.medium:
+                    icon = Icons.drag_handle;
+                    color = Colors.orange;
+                    break;
+                  case PlanPriority.low:
+                    icon = Icons.arrow_downward;
+                    color = Colors.green;
+                    break;
+                }
+                
                 return DropdownMenuItem(
                   value: priority,
-                  child: Text(priority.toString().split('.').last),
+                  child: Row(
+                    children: [
+                      Icon(icon, color: color),
+                      const SizedBox(width: 10),
+                      Text(
+                        name.toUpperCase(),
+                        style: TextStyle(
+                          color: color,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }).toList(),
               onChanged: (value) {
@@ -373,7 +493,7 @@ void _togglePlanStatus(String id) {
                 nameController.text,
                 descriptionController.text,
                 selectedDate,
-                selectedPriority,
+                selectedPriority,  // Pass the selected priority
               );
               Navigator.of(ctx).pop();
             }
@@ -384,7 +504,6 @@ void _togglePlanStatus(String id) {
     ),
   );
 }
-
 void _addPlan(String name, String description, DateTime date, PlanPriority priority) {
   setState(() {
     _plans.add(

@@ -1,3 +1,4 @@
+// in lib/models/plan.dart
 enum PlanStatus { pending, completed }
 enum PlanPriority { low, medium, high }
 
@@ -15,6 +16,6 @@ class Plan {
     required this.description,
     required this.date,
     this.status = PlanStatus.pending,
-    this.priority = PlanPriority.medium,
+    this.priority = PlanPriority.medium,  // Default priority is medium
   });
 }
