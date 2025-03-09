@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/plan.dart';
 import '../widgets/plan_list_item.dart';
+import '../widgets/plan_calendar.dart';
 
 class PlanManagerScreen extends StatefulWidget {
   const PlanManagerScreen({Key? key}) : super(key: key);
@@ -14,30 +15,42 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
   final List<Plan> _plans = [];
   final uuid = Uuid();
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Adoption & Travel Planner'),
-      ),
-      body: Column(
-        children: [
-          // Calendar will go here
-          
-          // Plan list will go here
-          Expanded(
-            child: _buildPlanList(),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Adoption & Travel Planner'),
+    ),
+    body: Column(
+      children: [
+        // Calendar
+        Card(
+          margin: const EdgeInsets.all(8),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: PlanCalendar(
+              plans: _plans,
+              onDaySelected: (date) {
+                // Filter plans by selected date or show plans for selected date
+                // You could also show a dialog to add a plan on this date
+              },
+            ),
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddPlanDialog,
-        tooltip: 'Create Plan',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
+        ),
+        
+        // Plan list
+        Expanded(
+          child: _buildPlanList(),
+        ),
+      ],
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: _showAddPlanDialog,
+      tooltip: 'Create Plan',
+      child: const Icon(Icons.add),
+    ),
+  );
+}
   Widget _buildPlanList() {
   if (_plans.isEmpty) {
     return const Center(
