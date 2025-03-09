@@ -5,6 +5,7 @@ import '../widgets/plan_list_item.dart';
 import '../widgets/plan_calendar.dart';
 import '../widgets/plan_drag_target.dart';
 import '../widgets/plan_draggable.dart';
+import '../widgets/priority_stats.dart';
 
 
 class PlanManagerScreen extends StatefulWidget {
@@ -113,6 +114,7 @@ PlanDragTarget(
   date: DateTime.now(), // You might want to use the selected date from calendar
   onAccept: (name, description, date, priority) {
     _showAddPlanDialogWithPrefilledData(name, description, date, priority);
+    PriorityStats(plans: _plans);
   },
 ),
         // Plan list
@@ -120,6 +122,7 @@ PlanDragTarget(
           child: _buildPlanList(),
         ),
       ],
+    
     ),
     floatingActionButton: FloatingActionButton(
       onPressed: _showAddPlanDialog,
@@ -271,23 +274,57 @@ void _showEditPlanDialog(String id) {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<PlanPriority>(
-              value: selectedPriority,
-              decoration: const InputDecoration(
-                labelText: 'Priority',
-              ),
-              items: PlanPriority.values.map((priority) {
-                return DropdownMenuItem(
-                  value: priority,
-                  child: Text(priority.toString().split('.').last),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  selectedPriority = value;
-                }
-              },
+  value: selectedPriority,
+  decoration: const InputDecoration(
+    labelText: 'Priority',
+    border: OutlineInputBorder(),
+  ),
+  items: PlanPriority.values.map((priority) {
+    // Get display name (convert 'high' from PlanPriority.high)
+    final name = priority.toString().split('.').last;
+    // Choose icon and color based on priority
+    IconData icon;
+    Color color;
+    
+    switch (priority) {
+      case PlanPriority.high:
+        icon = Icons.priority_high;
+        color = Colors.red;
+        break;
+      case PlanPriority.medium:
+        icon = Icons.drag_handle;
+        color = Colors.orange;
+        break;
+      case PlanPriority.low:
+        icon = Icons.arrow_downward;
+        color = Colors.green;
+        break;
+    }
+    
+    return DropdownMenuItem(
+      value: priority,
+      child: Row(
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: 10),
+          Text(
+            name.toUpperCase(),
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 16),
+          ),
+        ],
+      ),
+    );
+  }).toList(),
+  onChanged: (value) {
+    if (value != null) {
+      selectedPriority = value;
+    }
+  },
+),
+const SizedBox(height: 16),
             Row(
               children: [
                 const Text('Status: '),

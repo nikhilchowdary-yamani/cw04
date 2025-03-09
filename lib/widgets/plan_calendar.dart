@@ -72,34 +72,62 @@ class _PlanCalendarState extends State<PlanCalendar> {
         ),
         const SizedBox(height: 8),
         if (_getPlansForDay(_selectedDay).isNotEmpty)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    decoration: BoxDecoration(
+      color: Colors.blue.shade50,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Plans on ${_selectedDay.day}/${_selectedDay.month}/${_selectedDay.year}:',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        ..._getPlansForDay(_selectedDay).map((plan) {
+          // Priority indicator
+          IconData priorityIcon;
+          Color priorityColor;
+
+          switch (plan.priority) {
+            case PlanPriority.high:
+              priorityIcon = Icons.priority_high;
+              priorityColor = Colors.red;
+              break;
+            case PlanPriority.medium:
+              priorityIcon = Icons.drag_handle;
+              priorityColor = Colors.orange;
+              break;
+            case PlanPriority.low:
+              priorityIcon = Icons.arrow_downward;
+              priorityColor = Colors.green;
+              break;
+          }
+        
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
               children: [
+                Icon(priorityIcon, size: 12, color: priorityColor),
+                const SizedBox(width: 8),
                 Text(
-                  'Plans on ${_selectedDay.day}/${_selectedDay.month}/${_selectedDay.year}:',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  plan.name,
+                  style: TextStyle(
+                    decoration: plan.status == PlanStatus.completed
+                        ? TextDecoration.lineThrough
+                        : null,
+                  ),
                 ),
-                const SizedBox(height: 4),
-                ..._getPlansForDay(_selectedDay).map((plan) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.circle, size: 8),
-                          const SizedBox(width: 8),
-                          Text(plan.name),
-                        ],
-                      ),
-                    )),
               ],
             ),
-          ),
+          );
+        }),
       ],
+    ),
+  ),
+  ],
     );
   }
 }
