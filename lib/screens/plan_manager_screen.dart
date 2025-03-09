@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import '../models/plan.dart';
+import '../widgets/plan_list_item.dart';
 
 class PlanManagerScreen extends StatefulWidget {
   const PlanManagerScreen({Key? key}) : super(key: key);
@@ -38,24 +39,185 @@ class _PlanManagerScreenState extends State<PlanManagerScreen> {
   }
 
   Widget _buildPlanList() {
-    if (_plans.isEmpty) {
-      return const Center(
-        child: Text('No plans yet. Tap + to add a new plan.'),
-      );
-    }
-    
-    // Sort plans by priority (high to low)
-    _plans.sort((a, b) => b.priority.index.compareTo(a.priority.index));
-    
-    return ListView.builder(
-      itemCount: _plans.length,
-      itemBuilder: (context, index) {
-        // Plan list item will be implemented later
-        return Container();
-      },
+  if (_plans.isEmpty) {
+    return const Center(
+      child: Text('No plans yet. Tap + to add a new plan.'),
     );
   }
+  
+  // Sort plans by priority (high to low)
+  _plans.sort((a, b) => b.priority.index.compareTo(a.priority.index));
+  
+  return ListView.builder(
+    itemCount: _plans.length,
+    itemBuilder: (context, index) {
+      return PlanListItem(
+        plan: _plans[index],
+        onDelete: _deletePlan,
+        onToggleStatus: _togglePlanStatus,
+        onEdit: _showEditPlanDialog,
+      );
+    },
+  );
+}
+void _showEditPlanDialog(String id) {
+  final planIndex = _plans.indexWhere((plan) => plan.id == id);
+  if (planIndex == -1) return;
 
+  final plan = _plans[planIndex];
+  final nameController = TextEditingController(text: plan.name);
+  final descriptionController = TextEditingController(text: plan.description);
+  DateTime selectedDate = plan.date;
+  PlanPriority selectedPriority = plan.priority;
+
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Edit Plan'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Plan Name',
+              ),
+            ),
+            TextField(
+              controller: descriptionController,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Text('Date: '),
+                TextButton(
+                  onPressed: () async {
+                    final pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2100),
+                    );
+                    if (pickedDate != null) {
+                      setState(() {
+                        selectedDate = pickedDate;
+                      });
+                    }
+                  },
+                  child: Text(
+                    '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<PlanPriority>(
+              value: selectedPriority,
+              decoration: const InputDecoration(
+                labelText: 'Priority',
+              ),
+              items: PlanPriority.values.map((priority) {
+                return DropdownMenuItem(
+                  value: priority,
+                  child: Text(priority.toString().split('.').last),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  selectedPriority = value;
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Text('Status: '),
+                Switch(
+                  value: plan.status == PlanStatus.completed,
+                  onChanged: (value) {
+                    setState(() {
+                      plan.status = value ? PlanStatus.completed : PlanStatus.pending;
+                    });
+                  },
+                ),
+                Text(
+                  plan.status == PlanStatus.completed ? 'Completed' : 'Pending',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (nameController.text.trim().isNotEmpty) {
+              _updatePlan(
+                id,
+                nameController.text,
+                descriptionController.text,
+                selectedDate,
+                selectedPriority,
+                plan.status,
+              );
+              Navigator.of(ctx).pop();
+            }
+          },
+          child: const Text('Update'),
+        ),
+      ],
+    ),
+  );
+}
+
+void _updatePlan(
+  String id,
+  String name,
+  String description,
+  DateTime date,
+  PlanPriority priority,
+  PlanStatus status,
+) {
+  setState(() {
+    final planIndex = _plans.indexWhere((plan) => plan.id == id);
+    if (planIndex != -1) {
+      _plans[planIndex] = Plan(
+        id: id,
+        name: name,
+        description: description,
+        date: date,
+        priority: priority,
+        status: status,
+      );
+    }
+  });
+}
+void _deletePlan(String id) {
+  setState(() {
+    _plans.removeWhere((plan) => plan.id == id);
+  });
+}
+
+void _togglePlanStatus(String id) {
+  setState(() {
+    final planIndex = _plans.indexWhere((plan) => plan.id == id);
+    if (planIndex != -1) {
+      final currentStatus = _plans[planIndex].status;
+      _plans[planIndex].status = currentStatus == PlanStatus.pending
+          ? PlanStatus.completed
+          : PlanStatus.pending;
+    }
+  });
+}
   void _showAddPlanDialog() {
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
