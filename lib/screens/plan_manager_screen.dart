@@ -3,6 +3,9 @@ import 'package:uuid/uuid.dart';
 import '../models/plan.dart';
 import '../widgets/plan_list_item.dart';
 import '../widgets/plan_calendar.dart';
+import '../widgets/plan_drag_target.dart';
+import '../widgets/plan_draggable.dart';
+
 
 class PlanManagerScreen extends StatefulWidget {
   const PlanManagerScreen({Key? key}) : super(key: key);
@@ -37,7 +40,25 @@ Widget build(BuildContext context) {
             ),
           ),
         ),
-        
+        Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      const Text(
+        'Drag to create:',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      const PlanDraggable(),
+    ],
+  ),
+),
+PlanDragTarget(
+  date: DateTime.now(), // You might want to use the selected date from calendar
+  onAccept: (name, description, date, priority) {
+    _showAddPlanDialogWithPrefilledData(name, description, date, priority);
+  },
+),
         // Plan list
         Expanded(
           child: _buildPlanList(),
@@ -71,6 +92,43 @@ Widget build(BuildContext context) {
         onEdit: _showEditPlanDialog,
       );
     },
+  );
+}
+void _showAddPlanDialogWithPrefilledData(
+  String name,
+  String description,
+  DateTime date,
+  PlanPriority priority,
+) {
+  final nameController = TextEditingController(text: name);
+  final descriptionController = TextEditingController(text: description);
+  DateTime selectedDate = date;
+  PlanPriority selectedPriority = priority;
+
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Create New Plan'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Plan Name',
+              ),
+            ),
+            // Rest of the dialog same as _showAddPlanDialog
+            // ...
+          ],
+        ),
+      ),
+      actions: [
+        // Same actions as in _showAddPlanDialog
+        // ...
+      ],
+    ),
   );
 }
 void _showEditPlanDialog(String id) {
