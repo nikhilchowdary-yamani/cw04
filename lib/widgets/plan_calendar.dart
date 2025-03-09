@@ -87,7 +87,6 @@ class _PlanCalendarState extends State<PlanCalendar> {
         ),
         const SizedBox(height: 4),
         ..._getPlansForDay(_selectedDay).map((plan) {
-          // Priority indicator
           IconData priorityIcon;
           Color priorityColor;
 

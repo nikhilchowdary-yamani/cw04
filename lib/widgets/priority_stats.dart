@@ -11,7 +11,6 @@ class PriorityStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Count plans by priority
     int highCount = 0;
     int mediumCount = 0;
     int lowCount = 0;

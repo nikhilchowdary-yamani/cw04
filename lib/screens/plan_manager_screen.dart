@@ -83,7 +83,6 @@ Widget build(BuildContext context) {
 ),
 body: Column(
       children: [
-        // Calendar
         Card(
           margin: const EdgeInsets.all(8),
           child: Padding(
@@ -91,8 +90,6 @@ body: Column(
             child: PlanCalendar(
               plans: _plans,
               onDaySelected: (date) {
-                // Filter plans by selected date or show plans for selected date
-                // You could also show a dialog to add a plan on this date
               },
             ),
           ),
@@ -111,13 +108,12 @@ body: Column(
   ),
 ),
 PlanDragTarget(
-  date: DateTime.now(), // You might want to use the selected date from calendar
+  date: DateTime.now(),
   onAccept: (name, description, date, priority) {
     _showAddPlanDialogWithPrefilledData(name, description, date, priority);
     PriorityStats(plans: _plans);
   },
 ),
-        // Plan list
         Expanded(
           child: _buildPlanList(),
         ),
@@ -131,7 +127,7 @@ PlanDragTarget(
     ),
   );
 }
-// In _buildPlanList method in plan_manager_screen.dart
+
 Widget _buildPlanList() {
   final filteredPlans = _getFilteredPlans();
   
@@ -156,15 +152,12 @@ Widget _buildPlanList() {
     );
   }
   
-  // Sort plans by priority (high to low) and then by status (pending first)
   filteredPlans.sort((a, b) {
-    // First sort by priority (high to low)
     int priorityComparison = b.priority.index.compareTo(a.priority.index);
     if (priorityComparison != 0) {
       return priorityComparison;
     }
     
-    // If priorities are the same, sort by status (pending first)
     return a.status.index.compareTo(b.status.index);
   });
   
@@ -205,14 +198,10 @@ Widget _buildPlanList() {
                 labelText: 'Plan Name',
               ),
             ),
-            // Rest of the dialog same as _showAddPlanDialog
-            // ...
           ],
         ),
       ),
       actions: [
-        // Same actions as in _showAddPlanDialog
-        // ...
       ],
     ),
   );
@@ -280,9 +269,7 @@ void _showEditPlanDialog(String id) {
     border: OutlineInputBorder(),
   ),
   items: PlanPriority.values.map((priority) {
-    // Get display name (convert 'high' from PlanPriority.high)
     final name = priority.toString().split('.').last;
-    // Choose icon and color based on priority
     IconData icon;
     Color color;
     
@@ -415,7 +402,7 @@ void _showAddPlanDialog() {
   final nameController = TextEditingController();
   final descriptionController = TextEditingController();
   DateTime selectedDate = DateTime.now();
-  PlanPriority selectedPriority = PlanPriority.medium; // Default priority
+  PlanPriority selectedPriority = PlanPriority.medium;
 
   showDialog(
     context: context,
@@ -463,7 +450,6 @@ void _showAddPlanDialog() {
               ],
             ),
             const SizedBox(height: 16),
-            // Priority Selector
             DropdownButtonFormField<PlanPriority>(
               value: selectedPriority,
               decoration: const InputDecoration(
@@ -471,9 +457,7 @@ void _showAddPlanDialog() {
                 border: OutlineInputBorder(),
               ),
               items: PlanPriority.values.map((priority) {
-                // Get display name (convert 'high' from PlanPriority.high)
                 final name = priority.toString().split('.').last;
-                // Choose icon and color based on priority
                 IconData icon;
                 Color color;
                 
@@ -530,7 +514,7 @@ void _showAddPlanDialog() {
                 nameController.text,
                 descriptionController.text,
                 selectedDate,
-                selectedPriority,  // Pass the selected priority
+                selectedPriority,
               );
               Navigator.of(ctx).pop();
             }

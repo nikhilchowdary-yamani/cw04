@@ -1,4 +1,3 @@
-// In lib/widgets/plan_draggable.dart
 import 'package:flutter/material.dart';
 import '../models/plan.dart';
 
@@ -14,7 +13,6 @@ class _PlanDraggableState extends State<PlanDraggable> {
 
   @override
   Widget build(BuildContext context) {
-    // Choose color based on priority
     Color color;
     IconData icon;
     
@@ -35,7 +33,6 @@ class _PlanDraggableState extends State<PlanDraggable> {
 
     return Column(
       children: [
-        // Priority selector
         DropdownButton<PlanPriority>(
           value: _priority,
           icon: const Icon(Icons.arrow_drop_down),
@@ -82,7 +79,6 @@ class _PlanDraggableState extends State<PlanDraggable> {
         
         const SizedBox(height: 8),
         
-        // Draggable element
         LongPressDraggable<Map<String, dynamic>>(
           data: {
             'name': 'New Plan',
